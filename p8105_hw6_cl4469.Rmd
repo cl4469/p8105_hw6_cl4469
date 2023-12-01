@@ -167,7 +167,7 @@ boot_noNA |>
 ```
 Comment: After dropping the NA value of log_beta12 in boot_strap dataset, we plot the distribution of log(beta_1 * beta_2). We find that the estimates for log(beta_1 * beta_2) are left skewed and have some outliers, with a frequency around -5.5.
 
-#### Calculate CI for r-squared and log
+#### Calculate CI for r-squared and log_beta12
 The 95% confidence interval for r_squared
 ```{r}
 r_squared_ci = 
@@ -188,5 +188,46 @@ log_beta12_ci =
 log_beta12_ci
 ```
 
-
 ### Problem 3
+load dataset
+```{r}
+birth <- read_csv("data/birthweight.csv")
+```
+
+clean birthweight dataset
+```{r}
+# Check for missing data
+sum(is.na(birth))
+
+# Clean dataset
+birth_tidy = birth |>
+  janitor::clean_names() |>
+  mutate(babysex = case_when(babysex == 1 ~ 'male',
+                             babysex == 2 ~ 'female'),
+         frace = case_when(frace == 1 ~ "White",
+                        frace == 2 ~ "Black",
+                        frace == 3 ~ "Asian",
+                        frace == 4 ~ "Puerto Rican",
+                        frace == 8 ~ "Other",
+                        frace == 9 ~ "Unknown"),
+         malform = case_when(malform == 0 ~ 'absent',
+                             malform == 1 ~ 'present'),
+         mrace = case_when(mrace == 1 ~ "White",
+                        mrace == 2 ~ "Black",
+                        mrace == 3 ~ "Asian",
+                        mrace == 4 ~ "Puerto Rican",
+                        mrace == 8 ~ "Other"),
+         babysex = as.factor(babysex),
+         babysex = as.factor(babysex),
+         malform = as.factor(malform),
+         mrace = as.factor(mrace))
+```
+There's no NAs in the original dataset.
+
+```{r}
+
+
+
+
+
+
