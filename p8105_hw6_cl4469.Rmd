@@ -126,10 +126,10 @@ boot_strap = weather_df |>
   modelr::bootstrap(n = 5000) |>
   mutate(
     models= map(strap, ~lm(tmax ~ tmin + prcp, data = .x)),
-    r = map(models, broom::glance),
+    r2 = map(models, broom::glance),
     results = map(models, broom::tidy)) |>
-  select(.id,results,r) |> 
-  unnest(r,results) |>
+  select(.id,results,r2) |> 
+  unnest(r2,results) |>
   select(.id, term, estimate, r.squared) |>
   pivot_wider(
     names_from = term,
@@ -141,19 +141,30 @@ boot_strap = weather_df |>
     beta_2 = prcp) |>
   summarise(id=.id,
             r_squared = r.squared,
-            log_beta12 = log(beta_1*beta_2)) |>
-  na.omit()
+            log_beta12 = log(beta_1*beta_2))
 
+boot_noNA = boot_strap |>
+  na.omit()
 ```
-    
-Plot the distribution of ${r^2}$
+
+#### Plot the distribution of r_squared estimates
 ```{r}
 boot_strap |>
   ggplot(aes(x = r_squared)) +
   geom_density()+
   labs(title = "Distribution of r_squared Estimates",
        x = "r_squared estimates")
-
 ```
+Comment: We find that the distribution of r_squared estimates is approximately as normal distribution, and the r_squared estimates are around 0.92, indicating `tmin` and `prcp` are good predictors of `tmax`.
+
+####Plot the distributions of log(beta_1 * beta_2)
+```{r}
+boot_noNA |>
+  ggplot(aes(x = log_beta12)) +
+  geom_density() +
+  labs(title = "Distribution of log(beta_1 * beta_2) Estimates",
+       x = "log(beta_1 * beta_2) estimates")
+```
+Comment: After dropping the NA value of log_beta12 in boot_strap dataset, we plot the distribution of log(beta_1 * beta_2). We find that the estimates for log(beta_1 * beta_2) are left skewed and have some outliers, with a frequency around -5.5.
 
 ### Problem 3
