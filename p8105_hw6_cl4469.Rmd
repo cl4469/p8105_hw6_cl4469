@@ -191,13 +191,12 @@ log_beta12_ci
 ```
 
 ### Problem 3
-load dataset
-```{r}
-birth <- read_csv("data/birthweight.csv")
-```
 
-clean birthweight dataset
+#### Load and Clean birthweight dataset
 ```{r}
+#load dataset
+birth <- read_csv("data/birthweight.csv")
+
 # Check for missing data
 sum(is.na(birth))
 
@@ -224,19 +223,22 @@ birth_tidy = birth |>
          malform = as.factor(malform),
          mrace = as.factor(mrace))
 ```
-There's no NAs in the original dataset.
+Comment: There's no NAs in the original dataset.
 
-
+#### Regression Model
+Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. 
 ```{r}
 # fit a full model
-full_model = lm(bwt ~ ., data = birth_tidy) %>% 
+full_model = lm(bwt ~ ., data = birth_tidy) |>
   step(direction = "backward", trace = FALSE) 
 
-full_model %>% 
-  broom::tidy() %>% 
+full_model |>
+  broom::tidy() |>
   knitr::kable()
 ```
+Comment: To creat a regression model for birthweight, I fit on a model based on all variables as predictors, including babysex, bhead, blength, delwt, fincome, gaweeks, mheight, etc. Then, I use backward stepwise regression.
 
+#### Plot of Model Residuals Against Fitted Values
 ```{r}
 birth_tidy |>
     add_predictions(full_model) |>
@@ -248,7 +250,10 @@ birth_tidy |>
        x = "Fitted Values", 
        y = "Residuals")
 ```
+Comment: Most points are clustered between 2000 and 4000 fitted values, and between -1000 and 1000 residuals.Besides, the slope of the fitted line is almost 0. Since there is no clear direction for this plot, we cannot analysis the relationship for model residuals against fitted values.
 
+#### Creat two other models
+Compare your model to two others:One using length at birth and gestational age as predictors, One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 ```{r}
 # model 2
 model2 = lm(bwt ~ blength + gaweeks, data = birth_tidy)
@@ -263,7 +268,7 @@ model3 |>
   knitr::kable()
 ```
 
-
+#### Make Comparison of Cross-validated Prediction Error
 ```{r}
 cv_df= 
     crossv_mc(birth_tidy, 100) |>
@@ -277,7 +282,6 @@ cv_df=
            rmse_model3 = map2_dbl(model3, test, ~rmse(model = .x,data = .y))
     )
 
-
 cv_df |>
   select(starts_with("rmse")) |> 
   pivot_longer(
@@ -289,8 +293,4 @@ cv_df |>
   ggplot(aes(x = model, y = rmse)) + 
   geom_violin()
 ```
-
-
-
-
-       
+Comment: From the plots, we can conclude that the full model, which consider all predictors, has the smallest RMSE, indicating that the predictions in this model are closer to the actual values than the other two; however, the model2, which consider length at birth and gestational age as predictors, has the largest RMSE, indicating that the predictions in this model may far away from the true values. Therefore, it is better to use model1 than model2 and model3.
