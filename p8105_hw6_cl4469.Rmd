@@ -10,7 +10,6 @@ library(tidyverse)
 library(viridis)
 library(modelr)
 
-
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -107,7 +106,6 @@ model_results |>
 
 #### Download Dataset
 ```{r}
-
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -119,7 +117,6 @@ weather_df =
     tmin = tmin / 10,
     tmax = tmax / 10) |>
   select(name, id, everything())
-
 ```
 
 #### Bootstrap Resampling
