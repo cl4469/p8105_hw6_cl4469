@@ -8,6 +8,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(viridis)
+library(modelr)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -224,10 +225,25 @@ birth_tidy = birth |>
 ```
 There's no NAs in the original dataset.
 
+
 ```{r}
+# fit a full model
+full_model = lm(bwt ~ ., data = birth_tidy) %>% 
+  step(direction = "backward", trace = FALSE) 
 
+full_model %>% 
+  broom::tidy() %>% 
+  knitr::kable()
+```
 
-
-
-
-
+```{r}
+birth_tidy |>
+    add_predictions(full_model) |>
+    add_residuals(full_model) |>
+    ggplot(aes(x = pred, y = resid)) +
+    geom_point()  + 
+    geom_smooth(method = "lm") + 
+    labs(title = "Residuals Against Fitted Values", 
+       x = "Fitted Values", 
+       y = "Residuals")
+```
