@@ -10,6 +10,7 @@ library(tidyverse)
 library(viridis)
 library(modelr)
 
+
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -33,7 +34,7 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 In the data cleaning code below we create a `city_state` variable, change `victim_age` to numeric, modifiy victim_race to have categories white and non-white, with white as the reference category, and create a `resolution` variable indicating whether the homicide is solved. Lastly, we filtered out the following cities: Tulsa, AL; Dallas, TX; Phoenix, AZ; and Kansas City, MO; and we retained only the variables `city_state`, `resolution`, `victim_age`, `victim_sex`, and `victim_race`.
 
-```{r q1_data_cleaning}
+```{r}
 homicide_df = 
   read_csv("data/homicide-data.csv", na = c("", "NA", "Unknown")) |> 
   mutate(
@@ -247,3 +248,49 @@ birth_tidy |>
        x = "Fitted Values", 
        y = "Residuals")
 ```
+
+```{r}
+# model 2
+model2 = lm(bwt ~ blength + gaweeks, data = birth_tidy)
+model2 |>
+  broom::tidy() |> 
+  knitr::kable()
+
+# model 3
+model3 = lm(bwt ~ bhead * blength * babysex, data = birth_tidy)
+model3 |>
+  broom::tidy() |> 
+  knitr::kable()
+```
+
+
+```{r}
+cv_df= 
+    crossv_mc(birth_tidy, 100) |>
+    mutate(train = map(train, as_tibble),
+           test = map(test,as_tibble)) |>
+   mutate(model1 = map(train, ~ full_model),
+          model2 = map(train, ~ model2),
+          model3 = map(train, ~ model3)) |>
+    mutate(rmse_model1 = map2_dbl(model1, test, ~rmse(model = .x,data = .y)),
+           rmse_model2 = map2_dbl(model2, test, ~rmse(model = .x,data = .y)),
+           rmse_model3 = map2_dbl(model3, test, ~rmse(model = .x,data = .y))
+    )
+
+
+cv_df |>
+  select(starts_with("rmse")) |> 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") |> 
+  mutate(model = fct_inorder(model)) |> 
+  ggplot(aes(x = model, y = rmse)) + 
+  geom_violin()
+```
+
+
+
+
+       
